@@ -40,6 +40,9 @@ class SocketServer : public SocketUser {
         // Array of each server instance's socket FD
         int* instance_fds;
 
+        // Array of bools showing if each instance has an active connection
+        bool* instance_running;
+
         // Send and receive buffers for each server instance
         char* instance_recv_buffers;
         char* instance_send_buffers;
@@ -109,6 +112,15 @@ class SocketServer : public SocketUser {
          * @return false otherwise
          */
         bool process_user_input();
+
+        /**
+         * @brief Read the instance recv_buffer and do the corresponding action based on the msg_type_t found.
+         * Assumes recv_buffer has something.
+         * 
+         * @param instance_id of this server instance
+         * @param socket of this server instance
+         */
+        void process_request(const uint8_t instance_id, const int socket);
 
         /**
          * @brief Close the current connection.

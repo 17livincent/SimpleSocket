@@ -31,6 +31,9 @@ SocketServer::SocketServer(uint8_t max_connections, char* recv_buffer, int32_t r
     // Create instance FD array
     this->instance_fds = new int[max_connections];
 
+    // Create instance_running array
+    this->instance_running = new bool[max_connections];
+
     // Create thread instance array
     this->server_instances = new std::thread[max_connections];
 }
@@ -40,6 +43,7 @@ SocketServer::~SocketServer() {
     delete this->instance_send_buffer_len;
 
     delete instance_fds;
+    delete instance_running;
 
     delete[] this->server_instances;
 }
@@ -101,6 +105,7 @@ void SocketServer::th_server_instance(const uint8_t instance_id) {
         std::cout << "INSTANCE #" << (int)instance_id << " READY FOR CONNECTION" << std::endl;
 
         this->instance_fds[instance_id] = -1;
+        instance_running[instance_id] = false;
 
         // Wait until a new connection is accepted
 //        socket_mutex.lock();
@@ -109,6 +114,8 @@ void SocketServer::th_server_instance(const uint8_t instance_id) {
 
         if(new_socket != -1) {
             this->instance_fds[instance_id] = new_socket;
+            instance_running[instance_id] = true;
+
             // Send ACK to client
 //            socket_mutex.lock();
             int send_size = send(new_socket, (void*)&msg_ack, MSG_TYPE_LEN, 0);
@@ -127,11 +134,8 @@ void SocketServer::server_session(const uint8_t instance_id, const int socket) {
     std::cout << "INSTANCE #" << (int)instance_id << " CONNECTED WITH CLIENT " << socket << std::endl;
 
     char* instance_recv_buffer = &instance_recv_buffers[instance_id * recv_buffer_max_len];
-    char* instance_send_buffer = &instance_send_buffers[instance_id * recv_buffer_max_len];
 
-    bool instance_running = true;
-
-    while(this->active && instance_running) {
+    while(this->active && instance_running[instance_id]) {
         // After connection, send and read
 
 //        socket_mutex.lock();
@@ -144,32 +148,38 @@ void SocketServer::server_session(const uint8_t instance_id, const int socket) {
 
         if(instance_recv_buffer_len[instance_id] > 0) {
             // Process request...
-
-            switch((uint8_t)instance_recv_buffer[0]) {
-                case ((uint8_t)MSG_STOP):
-                    // Recieved STOP message
-                    std::cout << "INSTANCE #" << (int)instance_id << " RECEIVED STOP" << std::endl;
-                    instance_running = false;
-                    break;
-                default:
-                    break;
-            }
-
-            // Send back
-            instance_send_buffer_len[instance_id] = instance_recv_buffer_len[instance_id];
-            memcpy((void*)instance_send_buffer, (void*)instance_recv_buffer, instance_recv_buffer_len[instance_id]);
-
-//            socket_mutex.lock();
-            send(socket, (void*)instance_send_buffer, instance_send_buffer_len[instance_id], 0);
-//            socket_mutex.unlock();
-            
-            std::cout << "INSTANCE #" << (int)instance_id <<" ECHOED" << std::endl;
+            process_request(instance_id, socket);
         }
         else {
             std::cout << "INSTANCE #" << (int)instance_id << " CONNECTION CLOSED" << std::endl;
-            instance_running = false;
+            instance_running[instance_id] = false;
         }
     }
+}
+
+void SocketServer::process_request(const uint8_t instance_id, const int socket) {
+    char* instance_recv_buffer = &instance_recv_buffers[instance_id * recv_buffer_max_len];
+    char* instance_send_buffer = &instance_send_buffers[instance_id * recv_buffer_max_len];
+
+    switch((uint8_t)instance_recv_buffer[0]) {
+        case ((uint8_t)MSG_STOP):
+            // Recieved STOP message
+            std::cout << "INSTANCE #" << (int)instance_id << " RECEIVED STOP" << std::endl;
+            instance_running[instance_id] = false;
+            break;
+        default:
+            break;
+    }
+
+    // Send back
+    instance_send_buffer_len[instance_id] = instance_recv_buffer_len[instance_id];
+    memcpy((void*)instance_send_buffer, (void*)instance_recv_buffer, instance_recv_buffer_len[instance_id]);
+
+//    socket_mutex.lock();
+    send(socket, (void*)instance_send_buffer, instance_send_buffer_len[instance_id], 0);
+//    socket_mutex.unlock();
+            
+    std::cout << "INSTANCE #" << (int)instance_id <<" ECHOED" << std::endl;
 }
 
 void SocketServer::th_cl_capt_user_input() {
