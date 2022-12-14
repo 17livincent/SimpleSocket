@@ -9,8 +9,9 @@
 
 #include <netinet/in.h>
 #include <mutex>
+#include <string>
 
-// Default socket params
+// Default socket params (TCP on port 3005)
 #define DOMAIN AF_INET
 #define COMM_TYPE SOCK_STREAM
 #define PORT 3005
@@ -18,6 +19,10 @@
 // Default buffer lengths
 #define DEFAULT_RECV_BUFFER_LEN 4096
 #define DEFAULT_SEND_BUFFER_LEN 4096
+#define INPUT_BUFFER_LEN 1024
+
+// CLI commands
+const std::string STOP_CMD = "STOP";
 
 class SocketUser {
     public:
@@ -28,6 +33,11 @@ class SocketUser {
 
         // Mutex for the socket itself
         std::mutex socket_mutex;
+
+        // User input buffer to control client/server
+        std::mutex input_buffer_mutex;
+        char input_buffer[INPUT_BUFFER_LEN] = {0};
+        uint32_t input_buffer_len = 0;
 
         int32_t recv_buffer_max_len = 0;
         int32_t send_buffer_max_len = 0;

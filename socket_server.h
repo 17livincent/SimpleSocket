@@ -9,25 +9,23 @@
 #define SOCKET_SERVER
 
 #include <sys/socket.h>
-#include <vector>
+#include <thread>
 
 #include "socket_common.h"
 
 // Max concurrent socket connections
 const int DEFAULT_MAX_CONNECTIONS = 2;
 
-const int ADDRESS_SIZE = sizeof(struct sockaddr_in);
-const int OPT_SIZE = sizeof(int);
-
 class SocketServer : public SocketUser {
     public:
+        const int ADDRESS_SIZE = sizeof(struct sockaddr_in);
+        const int OPT_SIZE = sizeof(int);
+
         const int opt = 1;
         const int addrlen = sizeof(struct sockaddr_in);
 
         // SocketServer status flag
         volatile bool active = false;
-        // Shutdown flag
-        volatile bool shutdown = false;
 
         // Max live connections
         uint8_t max_connections = 0;
@@ -36,8 +34,11 @@ class SocketServer : public SocketUser {
         struct timeval to_time;
 
         // Array of all connections
-        // Each entry is a thread running server_instance()
+        // Each entry is a thread running th_server_instance()
         std::thread* server_instances;
+
+        // Array of each server instance's socket FD
+        int* instance_fds;
 
         // Send and receive buffers for each server instance
         char* instance_recv_buffers;
@@ -78,7 +79,7 @@ class SocketServer : public SocketUser {
          * @param instance_id an numerical ID of the server instance
          * 
          */
-        void server_instance(const uint8_t instance_id);
+        void th_server_instance(const uint8_t instance_id);
 
         /**
          * @brief Serve a client until the connection closes.
@@ -88,6 +89,26 @@ class SocketServer : public SocketUser {
          * @param socket of this server instance
          */
         void server_session(const uint8_t instance_id, const int socket);
+
+        /**
+         * @brief A thread to continuously read user input from command line.
+         * 
+         */
+        void th_cl_capt_user_input();
+
+        /**
+         * @brief PUBLIC: Wait for and capture user input from the command line.
+         * 
+         */
+        bool skt__cl_capt_user_input();
+
+        /**
+         * @brief Read the input buffer and do the requested action based on the contents.
+         * 
+         * @return true did something
+         * @return false otherwise
+         */
+        bool process_user_input();
 
         /**
          * @brief Close the current connection.
@@ -113,7 +134,7 @@ class SocketServer : public SocketUser {
          * @brief Start shutdown process.
          * 
          */
-        void set_shutdown();
+        void shutdown();
 };
 
 #endif  // SOCKET_SERVER

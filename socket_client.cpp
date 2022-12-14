@@ -129,6 +129,13 @@ int32_t SocketClient::skt__read_data(const char* data_buffer) {
     return read_len;
 }
 
+void SocketClient::th_cl_capt_user_input() {
+    while(this->active) {
+        skt__cl_capt_user_input();
+    }
+    std::cout << "EXITED th_cl_capt_user_input" << std::endl;
+}
+
 bool SocketClient::skt__cl_capt_user_input() {
     bool input_ok = false;
 
@@ -140,9 +147,20 @@ bool SocketClient::skt__cl_capt_user_input() {
     std::cin.getline(this->input_buffer, INPUT_BUFFER_LEN);
     std::cout << "GOT INPUT: " << this->input_buffer << std::endl;
 
+    input_ok = process_user_input();
+
+    input_buffer_mutex.unlock();
+
+    return input_ok;
+}
+
+bool SocketClient::process_user_input() {
+    bool input_ok = false;
+
     // Find '\0'
     bool found = false;
     uint32_t i = 0;
+
     while(!found && (i < INPUT_BUFFER_LEN)) {
         if(this->input_buffer[i] == '\0') {
             this->input_buffer_len = i + 1;
@@ -164,6 +182,7 @@ bool SocketClient::skt__cl_capt_user_input() {
         if(input == STOP_CMD) {
             std::cout << "RECEIVED STOP" << std::endl;
             if(connection_ackd) {
+                // Fill send buffer
                 skt__send_data((char*)&msg_stop, MSG_TYPE_LEN);
             }
             else {
@@ -176,15 +195,11 @@ bool SocketClient::skt__cl_capt_user_input() {
         }
     }
 
-    input_buffer_mutex.unlock();
-
     return input_ok;
 }
 
 void SocketClient::send_data() {
     if(this->active) {
-    this->skt__lock_send_buffer();
-
         if(this->send_buffer_len > 0) {
             int size_sent = send(this->socket_fd, this->send_buffer, this->send_buffer_len, 0);
 
@@ -194,20 +209,20 @@ void SocketClient::send_data() {
             this->send_buffer_len = 0;
         }
     }
-
-    this->skt__unlock_send_buffer();
 }
 
 void SocketClient::th_send_data() {
     while(this->active) {
-        //std::cout << "+th_send_data" << std::endl;
         // Send data only if the connection is acknowledged and there is something to send
-        if(this->skt__cl_capt_user_input()) {
+        this->skt__lock_send_buffer();
+
+        if(this->send_buffer_len > 0) {//if(this->skt__cl_capt_user_input()) {
             if(this->connection_ackd) {
                 this->send_data();
             } 
         }
-        //std::cout << "-th_send_data" << std::endl;
+
+        this->skt__unlock_send_buffer();
     }
     std::cout << "EXITED th_send_data" << std::endl;
 }
@@ -217,7 +232,6 @@ void SocketClient::th_receive_data() {
     while(this->active) {
         this->skt__lock_recv_buffer();
 
-        //std::cout << "+th_receive_data" << std::endl;
         this->recv_buffer_len = read(this->socket_fd, this->recv_buffer, this->recv_buffer_max_len);
         // Possible that recv_buffer has multiple messages sent from server
 
@@ -245,7 +259,6 @@ void SocketClient::th_receive_data() {
         }
 
         this->skt__unlock_recv_buffer();
-        //std::cout << "-th_receive_data " << this->recv_buffer_len << std::endl;
     }
     std::cout << "EXITED th_receive_data" << std::endl;
 }
@@ -264,33 +277,4 @@ void SocketClient::skt__lock_send_buffer() {
 
 void SocketClient::skt__unlock_send_buffer() {
     send_buffer_mutex.unlock();
-}
-
-int main(int argc, char** argv) {
-    // Init buffers
-    char recv_buffer[DEFAULT_RECV_BUFFER_LEN];
-    char send_buffer[DEFAULT_SEND_BUFFER_LEN];
-
-    // Create client
-    SocketClient client = SocketClient(recv_buffer, DEFAULT_RECV_BUFFER_LEN, send_buffer, DEFAULT_SEND_BUFFER_LEN);
-
-    bool setup_status = client.skt__setup();
-
-    if(setup_status == true) {
-        // Connect to server
-        bool connect_status = client.skt__connect();
-        std::cout << "CLIENT ESTABLISHED CONNECTION " << connect_status << std::endl;
-
-        if(connect_status) {
-            client.skt__set_active(true);
-
-            client.skt__run();
-
-            std::cout << "JOINED" << std::endl;
-        }
-    }
-
-    std::cout << "DONE " << client.skt__get_active() << std::endl;
-
-    return 0;
 }

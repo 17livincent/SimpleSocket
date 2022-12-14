@@ -14,20 +14,12 @@
 
 #include "socket_common.h"
 
-const uint32_t INPUT_BUFFER_LEN = 4096;
-const int ADDRESS_SIZE = sizeof(struct sockaddr);
-
 // SocketServer IP address
 const std::string SERVER_IP = "127.0.0.1";
 
-const std::string STOP_CMD = "STOP";
-
 class SocketClient : public SocketUser {
     public:
-        // User input buffer
-        std::mutex input_buffer_mutex;
-        char input_buffer[INPUT_BUFFER_LEN] = {0};
-        uint32_t input_buffer_len = 0;
+        const int ADDRESS_SIZE = sizeof(struct sockaddr);
 
         // Receive buffer shared with caller
         std::mutex recv_buffer_mutex;
@@ -108,10 +100,24 @@ class SocketClient : public SocketUser {
         void socket_close();
 
         /**
+         * @brief A thread to continuously read user input from command line.
+         * 
+         */
+        void th_cl_capt_user_input();
+
+        /**
          * @brief PUBLIC: Wait for and capture user input from the command line.
          * 
          */
         bool skt__cl_capt_user_input();
+
+        /**
+         * @brief Read the input buffer and do the requested action based on the contents.
+         * 
+         * @return true did something
+         * @return false otherwise
+         */
+        bool process_user_input();
 
         /**
          * @brief PUBLIC: Populate the send_buffer to send data.

@@ -28,6 +28,9 @@ SocketServer::SocketServer(uint8_t max_connections, char* recv_buffer, int32_t r
     this->instance_recv_buffer_len = new int32_t[max_connections];
     this->instance_send_buffer_len = new int32_t[max_connections];
 
+    // Create instance FD array
+    this->instance_fds = new int[max_connections];
+
     // Create thread instance array
     this->server_instances = new std::thread[max_connections];
 }
@@ -35,6 +38,8 @@ SocketServer::SocketServer(uint8_t max_connections, char* recv_buffer, int32_t r
 SocketServer::~SocketServer() {
     delete this->instance_recv_buffer_len;
     delete this->instance_send_buffer_len;
+
+    delete instance_fds;
 
     delete[] this->server_instances;
 }
@@ -91,15 +96,19 @@ bool SocketServer::skt__socket_setup() {
     return status;
 }
 
-void SocketServer::server_instance(const uint8_t instance_id) {
-    while(1) {
+void SocketServer::th_server_instance(const uint8_t instance_id) {
+    while(this->active) {
         std::cout << "INSTANCE #" << (int)instance_id << " READY FOR CONNECTION" << std::endl;
+
+        this->instance_fds[instance_id] = -1;
+
         // Wait until a new connection is accepted
 //        socket_mutex.lock();
         int new_socket = accept(this->socket_fd, (struct sockaddr*)&this->server_address, (socklen_t*)&this->addrlen);
 //        socket_mutex.unlock();
 
         if(new_socket != -1) {
+            this->instance_fds[instance_id] = new_socket;
             // Send ACK to client
 //            socket_mutex.lock();
             int send_size = send(new_socket, (void*)&msg_ack, MSG_TYPE_LEN, 0);
@@ -107,8 +116,11 @@ void SocketServer::server_instance(const uint8_t instance_id) {
 
             std::cout << "INSTANCE #" << (int)instance_id <<" sent ACK " << send_size << std::endl;
             server_session(instance_id, new_socket);
+
+            socket_close(new_socket);
         }
     }
+    std::cout << "EXITED th_server_instance" << std::endl;
 }
 
 void SocketServer::server_session(const uint8_t instance_id, const int socket) {
@@ -119,7 +131,7 @@ void SocketServer::server_session(const uint8_t instance_id, const int socket) {
 
     bool instance_running = true;
 
-    while(instance_running) {
+    while(this->active && instance_running) {
         // After connection, send and read
 
 //        socket_mutex.lock();
@@ -158,8 +170,65 @@ void SocketServer::server_session(const uint8_t instance_id, const int socket) {
             instance_running = false;
         }
     }
+}
 
-    socket_close(socket);
+void SocketServer::th_cl_capt_user_input() {
+    while(this->active) {
+        skt__cl_capt_user_input();
+    }
+    std::cout << "EXITED th_cl_capt_user_input" << std::endl;
+}
+
+bool SocketServer::skt__cl_capt_user_input() {
+    bool input_ok = false;
+
+    input_buffer_mutex.lock();
+
+    this->input_buffer_len = 0;
+    memset(this->input_buffer, 0x0, INPUT_BUFFER_LEN);
+
+    std::cin.getline(this->input_buffer, INPUT_BUFFER_LEN);
+    std::cout << "GOT INPUT: " << this->input_buffer << std::endl;
+
+    input_ok = process_user_input();
+
+    input_buffer_mutex.unlock();
+
+    return input_ok;
+}
+
+bool SocketServer::process_user_input() {
+    bool input_ok = false;
+
+    // Find '\0'
+    bool found = false;
+    uint32_t i = 0;
+
+    while(!found && (i < INPUT_BUFFER_LEN)) {
+        if(this->input_buffer[i] == '\0') {
+            this->input_buffer_len = i + 1;
+            found = true;
+        }
+        else {
+            i++;
+        }
+    }
+
+    if(!found || (i == 0)) {
+        std::cout << "INVALID INPUT" << std::endl;
+    }
+    else {
+        input_ok = true;
+
+        // Process and send known message types
+        std::string input = static_cast<std::string>(this->input_buffer);
+        if(input == STOP_CMD) {
+            std::cout << "RECEIVED STOP" << std::endl;
+            this->shutdown();
+        }
+    }
+
+    return input_ok;
 }
 
 void SocketServer::socket_close(int curr_socket) {
@@ -176,7 +245,7 @@ void SocketServer::skt__run_instances() {
     if(this->active) {
         // Activate threads
         for(uint8_t instance_id = 0; instance_id < this->max_connections; instance_id++) {
-            this->server_instances[instance_id] = std::thread(& SocketServer::server_instance, this, instance_id);
+            this->server_instances[instance_id] = std::thread(&SocketServer::th_server_instance, this, instance_id);
         }
 
         // Join all
@@ -186,25 +255,12 @@ void SocketServer::skt__run_instances() {
     }
 }
 
-void SocketServer::set_shutdown() {
-    this->shutdown = true;
-}
-
-int main(int argc, char** argv) {
-    // Init buffers
-    char recv_buffer[DEFAULT_MAX_CONNECTIONS * DEFAULT_RECV_BUFFER_LEN];
-    char send_buffer[DEFAULT_MAX_CONNECTIONS * DEFAULT_SEND_BUFFER_LEN];
-
-    // Create server
-    SocketServer server = SocketServer(DEFAULT_MAX_CONNECTIONS, (char*)recv_buffer, DEFAULT_RECV_BUFFER_LEN, (char*)send_buffer, DEFAULT_SEND_BUFFER_LEN);
-    
-    bool setup_status = server.skt__socket_setup();
-
-    if(setup_status == true) {
-        server.skt__set_active(true);
-
-        server.skt__run_instances();
+void SocketServer::shutdown() {
+    // Shutdown all sockets
+    ::shutdown(this->socket_fd, SHUT_RD);
+    for(int i = 0; i < this->max_connections; i++) {
+        ::shutdown(this->instance_fds[i], SHUT_RD);
     }
-
-    return 0;
+    
+    this->skt__set_active(false);
 }
