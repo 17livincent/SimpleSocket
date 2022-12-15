@@ -8,14 +8,10 @@
 #define SOCKET_CLIENT
 
 #include <sys/socket.h>
-#include <string>
 #include <mutex>
 #include <thread>
 
 #include "socket_common.h"
-
-// SocketServer IP address
-const std::string SERVER_IP = "127.0.0.1";
 
 class SocketClient : public SocketUser {
     public:

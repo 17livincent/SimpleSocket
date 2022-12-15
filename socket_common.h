@@ -16,6 +16,9 @@
 #define COMM_TYPE SOCK_STREAM
 #define PORT 3005
 
+// SocketServer IP address
+const std::string SERVER_IP = "127.0.0.1";
+
 // Default buffer lengths
 #define DEFAULT_RECV_BUFFER_LEN 4096
 #define DEFAULT_SEND_BUFFER_LEN 4096
