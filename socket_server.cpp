@@ -108,18 +108,14 @@ void SocketServer::th_server_instance(const uint8_t instance_id) {
         instance_running[instance_id] = false;
 
         // Wait until a new connection is accepted
-//        socket_mutex.lock();
         int new_socket = accept(this->socket_fd, (struct sockaddr*)&this->server_address, (socklen_t*)&this->addrlen);
-//        socket_mutex.unlock();
 
         if(new_socket != -1) {
             this->instance_fds[instance_id] = new_socket;
             instance_running[instance_id] = true;
 
             // Send ACK to client
-//            socket_mutex.lock();
             int send_size = send(new_socket, (void*)&msg_ack, MSG_TYPE_LEN, 0);
-//            socket_mutex.unlock();
 
             std::cout << "INSTANCE #" << (int)instance_id <<" sent ACK " << send_size << std::endl;
             server_session(instance_id, new_socket);
@@ -138,9 +134,7 @@ void SocketServer::server_session(const uint8_t instance_id, const int socket) {
     while(this->active && instance_running[instance_id]) {
         // After connection, send and read
 
-//        socket_mutex.lock();
         instance_recv_buffer_len[instance_id] = ::read(socket, (void*)instance_recv_buffer, recv_buffer_max_len);
-//        socket_mutex.unlock();
 
         std::cout << "INSTANCE #" << (int)instance_id << " RECEIVED: " << instance_recv_buffer_len[instance_id] << " ";
         print_buffer(instance_recv_buffer, instance_recv_buffer_len[instance_id]);
@@ -175,9 +169,7 @@ void SocketServer::process_request(const uint8_t instance_id, const int socket) 
     instance_send_buffer_len[instance_id] = instance_recv_buffer_len[instance_id];
     memcpy((void*)instance_send_buffer, (void*)instance_recv_buffer, instance_recv_buffer_len[instance_id]);
 
-//    socket_mutex.lock();
     send(socket, (void*)instance_send_buffer, instance_send_buffer_len[instance_id], 0);
-//    socket_mutex.unlock();
             
     std::cout << "INSTANCE #" << (int)instance_id <<" ECHOED" << std::endl;
 }
@@ -242,9 +234,7 @@ bool SocketServer::process_user_input() {
 }
 
 void SocketServer::socket_close(int curr_socket) {
-//    socket_mutex.lock();
     close(curr_socket);
-//    socket_mutex.unlock();
 }
 
 void SocketServer::skt__set_active(bool active) {

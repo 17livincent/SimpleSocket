@@ -34,9 +34,6 @@ class SocketUser {
         // SocketServer address
         struct sockaddr_in server_address;
 
-        // Mutex for the socket itself
-        std::mutex socket_mutex;
-
         // User input buffer to control client/server
         std::mutex input_buffer_mutex;
         char input_buffer[INPUT_BUFFER_LEN] = {0};

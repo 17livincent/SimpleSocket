@@ -17,14 +17,11 @@
 #include "socket_common.h"
 #include "socket_messages.h"
 
-std::string hello = "CLIENT SAYS HELLO!";
-
 SocketClient::SocketClient(char* recv_buffer, char* send_buffer) {
     this->recv_buffer = recv_buffer;
     this->send_buffer = send_buffer;
     this->recv_buffer_max_len = DEFAULT_RECV_BUFFER_LEN;
     this->send_buffer_max_len = DEFAULT_SEND_BUFFER_LEN;
-
 }
 
 SocketClient::SocketClient(char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len) {
@@ -95,8 +92,6 @@ bool SocketClient::skt__run() {
 
         status = true;
     }
-
-    socket_close();
 
     return status;
 }
