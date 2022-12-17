@@ -15,7 +15,7 @@
 
 class SocketClient : public SocketUser {
     public:
-        const int ADDRESS_SIZE = sizeof(struct sockaddr);
+        static const int ADDRESS_SIZE = sizeof(struct sockaddr);
 
         // Receive buffer shared with caller
         std::mutex recv_buffer_mutex;
@@ -49,6 +49,13 @@ class SocketClient : public SocketUser {
          * @param send_buffer_max_len max length of send buffer
          */
         SocketClient(char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len);
+
+        /**
+         * @brief Construct a new Socket Client object
+         * 
+         * @param client 
+         */
+        SocketClient(const SocketClient &client);
 
         /**
          * @brief Create the socket.

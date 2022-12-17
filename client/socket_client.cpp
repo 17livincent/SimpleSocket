@@ -17,18 +17,25 @@
 #include "socket_common.h"
 #include "socket_messages.h"
 
-SocketClient::SocketClient(char* recv_buffer, char* send_buffer) {
+SocketClient::SocketClient(char* recv_buffer, char* send_buffer) : SocketUser() {
     this->recv_buffer = recv_buffer;
     this->send_buffer = send_buffer;
     this->recv_buffer_max_len = DEFAULT_RECV_BUFFER_LEN;
     this->send_buffer_max_len = DEFAULT_SEND_BUFFER_LEN;
 }
 
-SocketClient::SocketClient(char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len) {
+SocketClient::SocketClient(char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len) : SocketUser() {
     this->recv_buffer = recv_buffer;
     this->send_buffer = send_buffer;
     this->recv_buffer_max_len = recv_buffer_max_len;
     this->send_buffer_max_len = send_buffer_max_len;
+}
+
+SocketClient::SocketClient(const SocketClient &client) {
+    this->recv_buffer = client.recv_buffer;
+    this->send_buffer = client.send_buffer;
+    this->recv_buffer_max_len = client.recv_buffer_max_len;
+    this->send_buffer_max_len = client.send_buffer_max_len;
 }
 
 bool SocketClient::skt__setup() {

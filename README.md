@@ -4,14 +4,14 @@ This is a multithreaded, TCP socket client and server implementation written in 
 
 ## How to
 ### Build and Run
-Run ```make``` to create the executables ```run_server``` and ```run_client```.  These are working implementations of the server and client.  The client sends data from the command line to the server, and the server echos.
+Run ```./pre_build.sh``` to set up the CMake build.  Step into the newly-created ```build/``` and run ```make``` to compile everything.  The resulting executables are ```test_server``` and ```test_client```.  These are working implementations of the server and client.  The client sends data from the command line to the server, and the server echos.
 
 ### Customize
 Sources files ```test_server.cpp``` and ```test_client.cpp``` show a good starting point for how the server and client are initialized and run.
 
 The ```SocketServer``` constructor requires parameters to define the maximum number of active connections AKA server instance threads, along with send and receive buffer lengths.  The buffer lengths can also be set for the ```SocketClient```.
 
-The ```SocketServer```'s ```process_request()``` function can be augmented to handle specific message types from the ```SocketClient```.  These message types are of type ```enum message_type_t``` in ```socket_messages.h```.  These messages types are expected to be the first byte in a written recv_buffer.
+The ```SocketServer```'s ```process_request()``` function can be augmented to handle specific message types from the ```SocketClient```.  They are of type ```enum message_type_t``` in ```socket_messages.h```.  These messages types are expected to be the first byte in a written recv_buffer.
 
 Additionally, the ```PORT``` and ```SERVER_IP``` can be changed in ```socket_common.h```.
 

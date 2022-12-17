@@ -22,7 +22,6 @@ class SocketServer : public SocketUser {
         const int OPT_SIZE = sizeof(int);
 
         const int opt = 1;
-        const int addrlen = sizeof(struct sockaddr_in);
 
         // SocketServer status flag
         volatile bool active = false;
@@ -59,6 +58,13 @@ class SocketServer : public SocketUser {
          * @param send_buffer_max_len max length of send buffer
          */
         SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len);
+
+        /**
+         * @brief Construct a new Socket Server object
+         * 
+         * @param server 
+         */
+        SocketServer(const SocketServer &server);
 
         /**
          * @brief Destroy the Socket Server object

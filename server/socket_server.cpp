@@ -108,7 +108,7 @@ void SocketServer::th_server_instance(const uint8_t instance_id) {
         instance_running[instance_id] = false;
 
         // Wait until a new connection is accepted
-        int new_socket = accept(this->socket_fd, (struct sockaddr*)&this->server_address, (socklen_t*)&this->addrlen);
+        int new_socket = accept(this->socket_fd, (struct sockaddr*)&this->server_address, (socklen_t*)&ADDRESS_SIZE);
 
         if(new_socket != -1) {
             this->instance_fds[instance_id] = new_socket;
