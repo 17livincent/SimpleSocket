@@ -5,6 +5,8 @@ project(SimpleSocket VERSION 1.0)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
+add_compile_options(-Wall -Werror)
+
 add_subdirectory(common)
 add_subdirectory(client)
 add_subdirectory(server)
