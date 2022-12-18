@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     char send_buffer[DEFAULT_MAX_CONNECTIONS * DEFAULT_SEND_BUFFER_LEN];
 
     // Create server
-    SocketServer server = SocketServer(DEFAULT_MAX_CONNECTIONS, (char*)recv_buffer, DEFAULT_RECV_BUFFER_LEN, (char*)send_buffer, DEFAULT_SEND_BUFFER_LEN);
+    SocketServer server = SocketServer(DEFAULT_MAX_CONNECTIONS, (char*)recv_buffer, DEFAULT_RECV_BUFFER_LEN, (char*)send_buffer, DEFAULT_SEND_BUFFER_LEN, &default_process_req_handler);
     
     bool setup_status = server.skt__socket_setup();
 

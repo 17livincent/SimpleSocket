@@ -17,7 +17,11 @@
 #include "socket_common.h"
 #include "socket_messages.h"
 
-SocketServer::SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len) {
+SocketServer::SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len) 
+    : SocketServer(max_connections, recv_buffer, recv_buffer_max_len, send_buffer, send_buffer_max_len, &default_process_req_handler) {
+}
+
+SocketServer::SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len, void (*process_req_handler)(const SocketServer*, uint8_t, int)) {
     this->max_connections = max_connections;
     this->recv_buffer_max_len = recv_buffer_max_len;
     this->instance_recv_buffers = recv_buffer;
@@ -36,6 +40,9 @@ SocketServer::SocketServer(uint8_t max_connections, char* recv_buffer, int32_t r
 
     // Create thread instance array
     this->server_instances = new std::thread[max_connections];
+
+    // Set process request handler
+    this->process_req_handler = process_req_handler;
 }
 
 SocketServer::~SocketServer() {
@@ -142,36 +149,13 @@ void SocketServer::server_session(const uint8_t instance_id, const int socket) {
 
         if(instance_recv_buffer_len[instance_id] > 0) {
             // Process request...
-            process_request(instance_id, socket);
+            process_req_handler(this, instance_id, socket);
         }
         else {
             std::cout << "INSTANCE #" << (int)instance_id << " CONNECTION CLOSED" << std::endl;
             instance_running[instance_id] = false;
         }
     }
-}
-
-void SocketServer::process_request(const uint8_t instance_id, const int socket) {
-    char* instance_recv_buffer = &instance_recv_buffers[instance_id * recv_buffer_max_len];
-    char* instance_send_buffer = &instance_send_buffers[instance_id * recv_buffer_max_len];
-
-    switch((uint8_t)instance_recv_buffer[0]) {
-        case ((uint8_t)MSG_STOP):
-            // Recieved STOP message
-            std::cout << "INSTANCE #" << (int)instance_id << " RECEIVED STOP" << std::endl;
-            instance_running[instance_id] = false;
-            break;
-        default:
-            break;
-    }
-
-    // Send back
-    instance_send_buffer_len[instance_id] = instance_recv_buffer_len[instance_id];
-    memcpy((void*)instance_send_buffer, (void*)instance_recv_buffer, instance_recv_buffer_len[instance_id]);
-
-    send(socket, (void*)instance_send_buffer, instance_send_buffer_len[instance_id], 0);
-            
-    std::cout << "INSTANCE #" << (int)instance_id <<" ECHOED" << std::endl;
 }
 
 void SocketServer::th_cl_capt_user_input() {
@@ -263,4 +247,27 @@ void SocketServer::shutdown() {
     }
     
     this->skt__set_active(false);
+}
+
+void default_process_req_handler(const SocketServer* server, const uint8_t instance_id, const int socket) {
+    char* instance_recv_buffer = &server->instance_recv_buffers[instance_id * server->recv_buffer_max_len];
+    char* instance_send_buffer = &server->instance_send_buffers[instance_id * server->recv_buffer_max_len];
+
+    switch((uint8_t)instance_recv_buffer[0]) {
+        case ((uint8_t)MSG_STOP):
+            // Recieved STOP message
+            std::cout << "INSTANCE #" << (int)instance_id << " RECEIVED STOP" << std::endl;
+            server->instance_running[instance_id] = false;
+            break;
+        default:
+            break;
+    }
+
+    // Send back
+    server->instance_send_buffer_len[instance_id] = server->instance_recv_buffer_len[instance_id];
+    memcpy((void*)instance_send_buffer, (void*)instance_recv_buffer, server->instance_recv_buffer_len[instance_id]);
+
+    send(socket, (void*)instance_send_buffer, server->instance_send_buffer_len[instance_id], 0);
+            
+    std::cout << "INSTANCE #" << (int)instance_id <<" ECHOED" << std::endl;
 }

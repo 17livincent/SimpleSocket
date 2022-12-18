@@ -42,6 +42,9 @@ class SocketServer : public SocketUser {
         // Array of bools showing if each instance has an active connection
         bool* instance_running;
 
+        // Request process function called by each instance
+        void (*process_req_handler)(const SocketServer* server, const uint8_t instance_id, const int socket);
+
         // Send and receive buffers for each server instance
         char* instance_recv_buffers;
         char* instance_send_buffers;
@@ -58,6 +61,18 @@ class SocketServer : public SocketUser {
          * @param send_buffer_max_len max length of send buffer
          */
         SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len);
+
+        /**
+         * @brief Construct a new Socket Server object
+         * 
+         * @param max_connections number of max connections
+         * @param recv_buffer receive buffer pointer
+         * @param recv_buffer_max_len max length of receive buffer
+         * @param send_buffer send buffer pointer
+         * @param send_buffer_max_len max length of send buffer
+         * @param process_req_handler function to process requests
+         */
+        SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len, void (*process_req_handler)(const SocketServer*, const uint8_t, const int));
 
         /**
          * @brief Construct a new Socket Server object
@@ -120,15 +135,6 @@ class SocketServer : public SocketUser {
         bool process_user_input();
 
         /**
-         * @brief Read the instance recv_buffer and do the corresponding action based on the msg_type_t found.
-         * Assumes recv_buffer has something.
-         * 
-         * @param instance_id of this server instance
-         * @param socket of this server instance
-         */
-        void process_request(const uint8_t instance_id, const int socket);
-
-        /**
          * @brief Close the current connection.
          * 
          * @param curr_socket the descriptor value returned by accept()
@@ -154,5 +160,15 @@ class SocketServer : public SocketUser {
          */
         void shutdown();
 };
+
+/**
+ * @brief Default process_req_handler function.
+ * Read the instance recv_buffer and do the corresponding action based on the msg_type_t found.
+ * Assumes recv_buffer has something.
+ * 
+ * @param instance_id of this server instance
+ * @param socket of this server instance
+ */
+void default_process_req_handler(const SocketServer* server, const uint8_t instance_id, const int socket);
 
 #endif  // SOCKET_SERVER
