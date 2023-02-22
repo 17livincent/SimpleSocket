@@ -37,8 +37,9 @@ class SocketClient : public SocketUser {
          * 
          * @param recv_buffer pointer to buffer for received data
          * @param send_buffer pointer to buffer to send data
+         * @param port server port
          */
-        SocketClient(char* recv_buffer, char* send_buffer);
+        SocketClient(char* recv_buffer, char* send_buffer, uint16_t port);
 
         /**
          * @brief Construct a new Socket Client object
@@ -47,8 +48,9 @@ class SocketClient : public SocketUser {
          * @param recv_buffer_max_len max length of receive buffer
          * @param send_buffer send buffer pointer
          * @param send_buffer_max_len max length of send buffer
+         * @param port server port
          */
-        SocketClient(char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len);
+        SocketClient(char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len, uint16_t port);
 
         /**
          * @brief Construct a new Socket Client object

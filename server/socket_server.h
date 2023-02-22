@@ -59,8 +59,9 @@ class SocketServer : public SocketUser {
          * @param recv_buffer_max_len max length of receive buffer
          * @param send_buffer send buffer pointer
          * @param send_buffer_max_len max length of send buffer
+         * @param port server port
          */
-        SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len);
+        SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len, uint16_t port);
 
         /**
          * @brief Construct a new Socket Server object
@@ -70,9 +71,10 @@ class SocketServer : public SocketUser {
          * @param recv_buffer_max_len max length of receive buffer
          * @param send_buffer send buffer pointer
          * @param send_buffer_max_len max length of send buffer
+         * @param port server port
          * @param process_req_handler function to process requests
          */
-        SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len, void (*process_req_handler)(const SocketServer*, const uint8_t, const int));
+        SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len, uint16_t port, void (*process_req_handler)(const SocketServer*, const uint8_t, const int));
 
         /**
          * @brief Construct a new Socket Server object

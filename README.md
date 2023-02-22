@@ -13,7 +13,7 @@ The ```SocketServer``` constructor requires parameters to define the maximum num
 
 The ```SocketServer```'s ```process_req_handler``` or ```default_process_req_handler()``` is the function used to handle specific message types from the ```SocketClient```.  They are of type ```enum message_type_t``` in ```socket_messages.h```.  These messages types are expected to be the first byte in a written recv_buffer.
 
-Additionally, the ```PORT``` and ```SERVER_IP``` can be changed in ```socket_common.h```.
+Additionally, the ```SERVER_IP``` can be changed in ```socket_common.h```.
 
 ## Overall Features
 

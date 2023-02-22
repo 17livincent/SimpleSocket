@@ -14,7 +14,7 @@ int main(int argc, char** argv) {
     char send_buffer[DEFAULT_SEND_BUFFER_LEN];
 
     // Create client
-    SocketClient client = SocketClient(recv_buffer, DEFAULT_RECV_BUFFER_LEN, send_buffer, DEFAULT_SEND_BUFFER_LEN);
+    SocketClient client = SocketClient(recv_buffer, DEFAULT_RECV_BUFFER_LEN, send_buffer, DEFAULT_SEND_BUFFER_LEN, 3005);
 
     bool setup_status = client.skt__setup();
 

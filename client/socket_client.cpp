@@ -17,18 +17,20 @@
 #include "socket_common.h"
 #include "socket_messages.h"
 
-SocketClient::SocketClient(char* recv_buffer, char* send_buffer) : SocketUser() {
+SocketClient::SocketClient(char* recv_buffer, char* send_buffer, uint16_t port) {
     this->recv_buffer = recv_buffer;
     this->send_buffer = send_buffer;
     this->recv_buffer_max_len = DEFAULT_RECV_BUFFER_LEN;
     this->send_buffer_max_len = DEFAULT_SEND_BUFFER_LEN;
+    this->port = port;
 }
 
-SocketClient::SocketClient(char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len) : SocketUser() {
+SocketClient::SocketClient(char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len, uint16_t port) {
     this->recv_buffer = recv_buffer;
     this->send_buffer = send_buffer;
     this->recv_buffer_max_len = recv_buffer_max_len;
     this->send_buffer_max_len = send_buffer_max_len;
+    this->port = port;
 }
 
 SocketClient::SocketClient(const SocketClient &client) {
@@ -36,6 +38,7 @@ SocketClient::SocketClient(const SocketClient &client) {
     this->send_buffer = client.send_buffer;
     this->recv_buffer_max_len = client.recv_buffer_max_len;
     this->send_buffer_max_len = client.send_buffer_max_len;
+    this->port = client.port;
 }
 
 bool SocketClient::skt__setup() {
@@ -61,7 +64,7 @@ bool SocketClient::skt__setup() {
 
     // Set destination address
     this->server_address.sin_family = AF_INET;
-    this->server_address.sin_port = htons(PORT);
+    this->server_address.sin_port = htons(this->port);
     if(inet_pton(AF_INET, SERVER_IP.c_str(), &this->server_address.sin_addr) != 1) {
         std::cout << "ADDRESS CONVERSION FAILED" << std::endl;
         status = false;

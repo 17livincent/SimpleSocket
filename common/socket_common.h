@@ -11,10 +11,9 @@
 #include <mutex>
 #include <string>
 
-// Default socket params (TCP on port 3005)
+// Default socket params
 #define DOMAIN AF_INET
 #define COMM_TYPE SOCK_STREAM
-#define PORT 3005
 
 // SocketServer IP address
 const std::string SERVER_IP = "127.0.0.1";
@@ -33,6 +32,8 @@ class SocketUser {
         int socket_fd;
         // SocketServer address
         struct sockaddr_in server_address;
+        // SocketServer port
+        uint16_t port;
 
         // User input buffer to control client/server
         std::mutex input_buffer_mutex;

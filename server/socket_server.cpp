@@ -17,16 +17,18 @@
 #include "socket_common.h"
 #include "socket_messages.h"
 
-SocketServer::SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len) 
-    : SocketServer(max_connections, recv_buffer, recv_buffer_max_len, send_buffer, send_buffer_max_len, &default_process_req_handler) {
+SocketServer::SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len, uint16_t port)
+    : SocketServer(max_connections, recv_buffer, recv_buffer_max_len, send_buffer, send_buffer_max_len, port, &default_process_req_handler) {
 }
 
-SocketServer::SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len, void (*process_req_handler)(const SocketServer*, uint8_t, int)) {
+SocketServer::SocketServer(uint8_t max_connections, char* recv_buffer, int32_t recv_buffer_max_len, char* send_buffer, int32_t send_buffer_max_len, uint16_t port, void (*process_req_handler)(const SocketServer*, const uint8_t, const int)) {
     this->max_connections = max_connections;
     this->recv_buffer_max_len = recv_buffer_max_len;
     this->instance_recv_buffers = recv_buffer;
     this->send_buffer_max_len = send_buffer_max_len;
     this->instance_send_buffers = send_buffer;
+
+    this->port = port;
 
     // Create buffer size arrays
     this->instance_recv_buffer_len = new int32_t[max_connections];
@@ -86,7 +88,7 @@ bool SocketServer::skt__socket_setup() {
     // 3. Bind
     this->server_address.sin_family = AF_INET;
     this->server_address.sin_addr.s_addr = INADDR_ANY;
-    this->server_address.sin_port = htons(PORT);
+    this->server_address.sin_port = htons(this->port);
     if(bind(this->socket_fd, (struct sockaddr*)&this->server_address, ADDRESS_SIZE) != 0) {
         std::cout << "BIND FAILED" << std::endl;
         status = false;
