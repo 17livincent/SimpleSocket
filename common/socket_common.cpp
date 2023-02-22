@@ -9,7 +9,7 @@
 
 #include "socket_common.h"
 
-void SocketUser::print_buffer(char* buffer, int32_t len) {
+void print_buffer(char* buffer, int32_t len) {
     for(int32_t i = 0; i < len; i++) {
         std::cout << buffer[i];
     }

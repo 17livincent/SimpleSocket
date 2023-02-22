@@ -136,28 +136,7 @@ void SocketServer::th_server_instance(const uint8_t instance_id) {
 }
 
 void SocketServer::server_session(const uint8_t instance_id, const int socket) {
-    std::cout << "INSTANCE #" << (int)instance_id << " CONNECTED WITH CLIENT " << socket << std::endl;
-
-    char* instance_recv_buffer = &instance_recv_buffers[instance_id * recv_buffer_max_len];
-
-    while(this->active && instance_running[instance_id]) {
-        // After connection, send and read
-
-        instance_recv_buffer_len[instance_id] = ::read(socket, (void*)instance_recv_buffer, recv_buffer_max_len);
-
-        std::cout << "INSTANCE #" << (int)instance_id << " RECEIVED: " << instance_recv_buffer_len[instance_id] << " ";
-        print_buffer(instance_recv_buffer, instance_recv_buffer_len[instance_id]);
-        std::cout << std::endl;
-
-        if(instance_recv_buffer_len[instance_id] > 0) {
-            // Process request...
-            process_req_handler(this, instance_id, socket);
-        }
-        else {
-            std::cout << "INSTANCE #" << (int)instance_id << " CONNECTION CLOSED" << std::endl;
-            instance_running[instance_id] = false;
-        }
-    }
+    default_process_req_handler(this, instance_id, socket);
 }
 
 void SocketServer::th_cl_capt_user_input() {
@@ -255,21 +234,42 @@ void default_process_req_handler(const SocketServer* server, const uint8_t insta
     char* instance_recv_buffer = &server->instance_recv_buffers[instance_id * server->recv_buffer_max_len];
     char* instance_send_buffer = &server->instance_send_buffers[instance_id * server->recv_buffer_max_len];
 
-    switch((uint8_t)instance_recv_buffer[0]) {
-        case ((uint8_t)MSG_STOP):
-            // Recieved STOP message
-            std::cout << "INSTANCE #" << (int)instance_id << " RECEIVED STOP" << std::endl;
+    std::cout << "INSTANCE #" << (int)instance_id << " CONNECTED WITH CLIENT " << socket << std::endl;
+
+    while(server->active && server->instance_running[instance_id]) {
+        // After connection, send and read
+
+        server->instance_recv_buffer_len[instance_id] = ::read(socket, (void*)instance_recv_buffer, server->recv_buffer_max_len);
+
+        std::cout << "INSTANCE #" << (int)instance_id << " RECEIVED: " << server->instance_recv_buffer_len[instance_id] << " ";
+        print_buffer(instance_recv_buffer, server->instance_recv_buffer_len[instance_id]);
+        std::cout << std::endl;
+
+        if(server->instance_recv_buffer_len[instance_id] > 0) {
+            // Process request...
+            //
+            switch((uint8_t)instance_recv_buffer[0]) {
+                case ((uint8_t)MSG_STOP):
+                    // Recieved STOP message
+                    std::cout << "INSTANCE #" << (int)instance_id << " RECEIVED STOP" << std::endl;
+                    server->instance_running[instance_id] = false;
+                    break;
+                default:
+                    break;
+            }
+
+            // Send back
+            server->instance_send_buffer_len[instance_id] = server->instance_recv_buffer_len[instance_id];
+            memcpy((void*)instance_send_buffer, (void*)instance_recv_buffer, server->instance_recv_buffer_len[instance_id]);
+
+            send(socket, (void*)instance_send_buffer, server->instance_send_buffer_len[instance_id], 0);
+                    
+            std::cout << "INSTANCE #" << (int)instance_id <<" ECHOED" << std::endl;
+            //
+        }
+        else {
+            std::cout << "INSTANCE #" << (int)instance_id << " CONNECTION CLOSED" << std::endl;
             server->instance_running[instance_id] = false;
-            break;
-        default:
-            break;
+        }
     }
-
-    // Send back
-    server->instance_send_buffer_len[instance_id] = server->instance_recv_buffer_len[instance_id];
-    memcpy((void*)instance_send_buffer, (void*)instance_recv_buffer, server->instance_recv_buffer_len[instance_id]);
-
-    send(socket, (void*)instance_send_buffer, server->instance_send_buffer_len[instance_id], 0);
-            
-    std::cout << "INSTANCE #" << (int)instance_id <<" ECHOED" << std::endl;
 }

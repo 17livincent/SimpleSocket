@@ -42,12 +42,12 @@ class SocketUser {
 
         int32_t recv_buffer_max_len = 0;
         int32_t send_buffer_max_len = 0;
-
-        /**
-         * @brief Print contents of recv_buffer
-         * 
-         */
-        void print_buffer(char* buffer, int32_t len);
 };
+
+/**
+ * @brief Print contents of recv_buffer
+ * 
+ */
+void print_buffer(char* buffer, int32_t len);
 
 #endif  // COMMON
