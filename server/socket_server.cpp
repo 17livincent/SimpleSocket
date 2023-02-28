@@ -136,7 +136,7 @@ void SocketServer::th_server_instance(const uint8_t instance_id) {
 }
 
 void SocketServer::server_session(const uint8_t instance_id, const int socket) {
-    default_process_req_handler(this, instance_id, socket);
+    process_req_handler(this, instance_id, socket);
 }
 
 void SocketServer::th_cl_capt_user_input() {
