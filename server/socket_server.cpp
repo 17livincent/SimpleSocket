@@ -127,7 +127,9 @@ void SocketServer::th_server_instance(const uint8_t instance_id) {
             int send_size = send(new_socket, (void*)&msg_ack, MSG_TYPE_LEN, 0);
 
             std::cout << "INSTANCE #" << (int)instance_id <<" sent ACK " << send_size << std::endl;
-            server_session(instance_id, new_socket);
+            if(send_size == MSG_TYPE_LEN) {
+                server_session(instance_id, new_socket);
+            }
 
             socket_close(new_socket);
         }
