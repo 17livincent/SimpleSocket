@@ -73,6 +73,10 @@ bool SocketServer::skt__socket_setup() {
     }
 
     // 2. Setsockopt
+    struct timeval timeout_val;
+    timeout_val.tv_sec = 10;
+    timeout_val.tv_usec = 0;
+    setsockopt(this->socket_fd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&timeout_val, sizeof(timeout_val));
     if(setsockopt(this->socket_fd, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT, &this->opt, OPT_SIZE) != 0) {
         std::cout << "SETSOCKOPT FAILED" << std::endl;
         status = false;
