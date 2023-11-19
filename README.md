@@ -1,6 +1,6 @@
 # SimpleSocket
 
-This is a multithreaded, TCP socket client and server implementation written in C++.  This package is being developed on Ubunth 20.04 and is not guaranteed to work on other OS's.  Ports to other platforms will at the minimum, require switching the socket and thread libraries and functions.
+This is a multithreaded, TCP socket client and server implementation written in C++.  This package is being developed on Ubunth 22.04 and is not guaranteed to work on other OS's.  Ports to other platforms will at the minimum, require switching the socket and thread libraries and functions.
 
 ## How to
 ### Build and Run
