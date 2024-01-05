@@ -110,6 +110,10 @@ void SocketClient::socket_close() {
     close(this->socket_fd);
 }
 
+void SocketClient::shutdown() {
+    ::shutdown(this->socket_fd, SHUT_RD);
+}
+
 void SocketClient::skt__send_data(const char* data_buffer, uint32_t datalen) {
     this->skt__lock_send_buffer();
 
@@ -132,31 +136,6 @@ int32_t SocketClient::skt__read_data(const char* data_buffer) {
     }
 
     return read_len;
-}
-
-void SocketClient::th_cl_capt_user_input() {
-    while(this->active) {
-        skt__cl_capt_user_input();
-    }
-    std::cout << "EXITED th_cl_capt_user_input" << std::endl;
-}
-
-bool SocketClient::skt__cl_capt_user_input() {
-    bool input_ok = false;
-
-    input_buffer_mutex.lock();
-
-    this->input_buffer_len = 0;
-    memset(this->input_buffer, 0x0, INPUT_BUFFER_LEN);
-
-    std::cin.getline(this->input_buffer, INPUT_BUFFER_LEN);
-    std::cout << "GOT INPUT: " << this->input_buffer << std::endl;
-
-    input_ok = process_user_input();
-
-    input_buffer_mutex.unlock();
-
-    return input_ok;
 }
 
 bool SocketClient::process_user_input() {

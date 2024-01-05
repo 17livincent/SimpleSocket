@@ -105,16 +105,10 @@ class SocketClient : public SocketUser {
         void socket_close();
 
         /**
-         * @brief A thread to continuously read user input from command line.
+         * @brief Start shutdown process.
          * 
          */
-        void th_cl_capt_user_input();
-
-        /**
-         * @brief PUBLIC: Wait for and capture user input from the command line.
-         * 
-         */
-        bool skt__cl_capt_user_input();
+        void shutdown();
 
         /**
          * @brief Read the input buffer and do the requested action based on the contents.
@@ -178,9 +172,6 @@ class SocketClient : public SocketUser {
         void skt__unlock_send_buffer();
 
     private:
-        // SocketClient status flag
-        volatile bool active = false;
-
         // Receiving thread
         std::thread th_recv;
         // Sending thread

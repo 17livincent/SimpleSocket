@@ -42,6 +42,30 @@ class SocketUser {
 
         int32_t recv_buffer_max_len = 0;
         int32_t send_buffer_max_len = 0;
+
+        /**
+         * @brief A thread to continuously read user input from command line.
+         * 
+         */
+        void th_cl_capt_user_input();
+
+    protected:
+        // Status flag
+        volatile bool active = false;
+
+        /**
+         * @brief PUBLIC: Wait for and capture user input from the command line.
+         * 
+         */
+        bool skt__cl_capt_user_input();
+
+        /**
+         * @brief Read the input buffer and do the requested action based on the contents.
+         * 
+         * @return true did something
+         * @return false otherwise
+         */
+        virtual bool process_user_input() {return false;};
 };
 
 /**

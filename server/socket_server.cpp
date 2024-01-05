@@ -141,31 +141,6 @@ void SocketServer::server_session(const uint8_t instance_id, const int socket) {
     process_req_handler(this, instance_id, socket);
 }
 
-void SocketServer::th_cl_capt_user_input() {
-    while(this->active) {
-        skt__cl_capt_user_input();
-    }
-    std::cout << "EXITED th_cl_capt_user_input" << std::endl;
-}
-
-bool SocketServer::skt__cl_capt_user_input() {
-    bool input_ok = false;
-
-    input_buffer_mutex.lock();
-
-    this->input_buffer_len = 0;
-    memset(this->input_buffer, 0x0, INPUT_BUFFER_LEN);
-
-    std::cin.getline(this->input_buffer, INPUT_BUFFER_LEN);
-    std::cout << "GOT INPUT: " << this->input_buffer << std::endl;
-
-    input_ok = process_user_input();
-
-    input_buffer_mutex.unlock();
-
-    return input_ok;
-}
-
 bool SocketServer::process_user_input() {
     bool input_ok = false;
 

@@ -117,18 +117,6 @@ class SocketServer : public SocketUser {
         void server_session(const uint8_t instance_id, const int socket);
 
         /**
-         * @brief A thread to continuously read user input from command line.
-         * 
-         */
-        void th_cl_capt_user_input();
-
-        /**
-         * @brief PUBLIC: Wait for and capture user input from the command line.
-         * 
-         */
-        bool skt__cl_capt_user_input();
-
-        /**
          * @brief Read the input buffer and do the requested action based on the contents.
          * 
          * @return true did something
